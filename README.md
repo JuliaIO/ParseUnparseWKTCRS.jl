@@ -7,6 +7,10 @@
 [![PkgEval](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/P/ParseUnparseWKTCRS.svg)](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/P/ParseUnparseWKTCRS.html)
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
+Parse/unparse WKT-CRS, with perfect roundtripping. Type-stable.
+
+## REPL example
+
 ```julia-repl
 julia> using
            ParseUnparse.AbstractParserIdents,
