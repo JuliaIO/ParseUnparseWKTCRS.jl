@@ -130,8 +130,7 @@ module ParseUnparseWKTCRS
                 if isempty(oc)
                     @goto string_error
                 end
-                c = only(oc)
-                if character_does_not_need_escaping(c)
+                if character_does_not_need_escaping(only(oc))
                     @goto state_2
                 end
             end
