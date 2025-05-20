@@ -1,5 +1,5 @@
 module ParseUnparseWKTCRS
-    export GrammarSymbolKinds, ParserIdents
+    export GrammarSymbolKinds, TokenUtil, ParserIdents
     module GrammarSymbolKinds
         export GrammarSymbolKind, grammar_symbol_error_kinds
         using ParseUnparse.KindConstruction
@@ -47,7 +47,7 @@ module ParseUnparseWKTCRS
         )
     end
     module TokenIterators
-        export TokenIterator
+        export TokenIterator, encode_string, decode_string
         using ParseUnparse.LexingUtil, ..GrammarSymbolKinds
         struct TokenIterator{ListDelimiters, T}
             character_iterator::T
@@ -342,6 +342,99 @@ module ParseUnparseWKTCRS
                 end
             end
         end
+        function encode_string_single_char(out::IO, decoded::AbstractChar)
+            q = only(significant_characters.general.double_quote)
+            print(out, decoded)
+            if decoded == q
+                print(out, decoded)
+            end
+        end
+        function encode_string_no_quotes(out::IO, decoded)
+            foreach(Base.Fix1(encode_string_single_char, out), decoded)
+        end
+        """
+            encode_string(out::IO, decoded)::Nothing
+
+        Encode the `decoded` iterator as a WKT-CRS string, outputting to `out`.
+        """
+        function encode_string(out::IO, decoded)
+            q = only(significant_characters.general.double_quote)
+            print(out, q)
+            encode_string_no_quotes(out, decoded)
+            print(out, q)
+            nothing
+        end
+        """
+            decode_string(out::IO, encoded)::Bool
+
+        Decode the `encoded` iterator, interpreted as a WKT-CRS string, outputting to `out`.
+
+        Return `true` if and only if no error was encountered.
+        """
+        function decode_string(out::IO, encoded)
+            lexer_state = let ols = lexer_state_simple_new(encoded)
+                if ols === ()
+                    return false
+                end
+                only(ols)
+            end
+            dquot = significant_characters.general.double_quote
+            # This is a finite-state machine just like in `lex_string!`, but starting
+            # with an extra state to skip initial white space and ending with an extra
+            # state to check there's nothing except for white space at the end.
+            while true
+                oc = lexer_state_consume!(lexer_state)
+                if isempty(oc)
+                    return false
+                end
+                c = only(oc)
+                if c ∈ dquot
+                    break
+                end
+                if c ∉ significant_characters.general.whitespace
+                    return false
+                end
+            end
+            # state 1 is merged into the above
+            @label state_2
+            let oc = lexer_state_consume!(lexer_state)
+                if isempty(oc)
+                    return false
+                end
+                c = only(oc)
+                if character_does_not_need_escaping(c)
+                    print(out, c)
+                    @goto state_2
+                end
+            end
+            # state 3, accepting state
+            let oc = lexer_state_peek!(lexer_state)
+                if isempty(oc)
+                    return true
+                end
+                c = only(oc)
+                if !character_does_not_need_escaping(c)
+                    print(out, c)
+                    lexer_state_consume!(lexer_state)
+                    @goto state_2
+                end
+            end
+            # trailing whitespace
+            while true
+                oc = lexer_state_consume!(lexer_state)
+                if isempty(oc)
+                    break
+                end
+                if only(oc) ∉ significant_characters.general.whitespace
+                    return false
+                end
+            end
+            true
+        end
+    end
+    module TokenUtil
+        export encode_string, decode_string
+        using ..TokenIterators
     end
     module ParserIdents
         export ParserIdent
