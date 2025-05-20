@@ -125,14 +125,14 @@ module ParseUnparseWKTCRS
                     @goto string_error
                 end
             end
-            @label string_state_2
+            @label state_2
             let oc = lexer_state_consume!(lexer_state)
                 if isempty(oc)
                     @goto string_error
                 end
                 c = only(oc)
                 if character_does_not_need_escaping(c)
-                    @goto string_state_2
+                    @goto state_2
                 end
             end
             # state 3, accepting state
@@ -142,7 +142,7 @@ module ParseUnparseWKTCRS
                 end
                 if !character_does_not_need_escaping(only(oc))
                     lexer_state_consume!(lexer_state)
-                    @goto string_state_2
+                    @goto state_2
                 end
             end
             @goto string_done
@@ -171,10 +171,10 @@ module ParseUnparseWKTCRS
                 end
                 c = only(oc)
                 if c ∈ significant_characters.general.decimal_digit
-                    @goto number_state_3
+                    @goto state_3
                 end
                 if c ∈ significant_characters.number.decimal_separator
-                    @goto number_state_2
+                    @goto state_2
                 end
                 if c ∉ significant_characters.number.sign
                     @goto number_error
@@ -187,13 +187,13 @@ module ParseUnparseWKTCRS
                 end
                 c = only(oc)
                 if c ∈ significant_characters.general.decimal_digit
-                    @goto number_state_3
+                    @goto state_3
                 end
                 if c ∉ significant_characters.number.decimal_separator
                     @goto number_error
                 end
             end
-            @label number_state_2
+            @label state_2
             let oc = lexer_state_consume!(lexer_state)
                 if isempty(oc)
                     @goto number_error
@@ -202,7 +202,7 @@ module ParseUnparseWKTCRS
                     @goto number_error
                 end
             end
-            @label number_state_5  # accepting state
+            @label state_5  # accepting state
             let oc = lexer_state_peek!(lexer_state)
                 if isempty(oc)
                     @goto number_done
@@ -212,26 +212,26 @@ module ParseUnparseWKTCRS
                 if c_is_decimal_digit || (c ∈ significant_characters.number.e)
                     lexer_state_consume!(lexer_state)
                     if c_is_decimal_digit
-                        @goto number_state_5
+                        @goto state_5
                     end
-                    @goto number_state_6
+                    @goto state_6
                 end
             end
             @goto number_done
-            @label number_state_6
+            @label state_6
             let oc = lexer_state_consume!(lexer_state)
                 if isempty(oc)
                     @goto number_error
                 end
                 c = only(oc)
                 if c ∈ significant_characters.general.decimal_digit
-                    @goto number_state_7
+                    @goto state_7
                 end
                 if c ∉ significant_characters.number.sign
                     @goto number_error
                 end
             end
-            @label number_state_8
+            @label state_8
             let oc = lexer_state_consume!(lexer_state)
                 if isempty(oc)
                     @goto number_error
@@ -240,18 +240,18 @@ module ParseUnparseWKTCRS
                     @goto number_error
                 end
             end
-            @label number_state_7  # accepting state
+            @label state_7  # accepting state
             let oc = lexer_state_peek!(lexer_state)
                 if isempty(oc)
                     @goto number_done
                 end
                 if only(oc) ∈ significant_characters.general.decimal_digit
                     lexer_state_consume!(lexer_state)
-                    @goto number_state_7
+                    @goto state_7
                 end
             end
             @goto number_done
-            @label number_state_3  # accepting state
+            @label state_3  # accepting state
             let oc = lexer_state_peek!(lexer_state)
                 if isempty(oc)
                     @goto number_done
@@ -262,12 +262,12 @@ module ParseUnparseWKTCRS
                 if c_is_decimal_digit || c_is_decimal_separator || (c ∈ significant_characters.number.e)
                     lexer_state_consume!(lexer_state)
                     if c_is_decimal_digit
-                        @goto number_state_3
+                        @goto state_3
                     end
                     if c_is_decimal_separator
-                        @goto number_state_5
+                        @goto state_5
                     end
-                    @goto number_state_6
+                    @goto state_6
                 end
             end
             @goto number_done
